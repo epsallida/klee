@@ -538,8 +538,12 @@ void SpecialFunctionHandler::handleGetObjSize(ExecutionState &state,
   executor.resolveExact(state, arguments[0], rl, "klee_get_obj_size");
   for (Executor::ExactResolutionList::iterator it = rl.begin(), 
          ie = rl.end(); it != ie; ++it) {
-    executor.bindLocal(target, *it->second, 
-                       ConstantExpr::create(it->first.first->size, Expr::Int32));
+    executor.bindLocal(
+        target, *it->second,
+        ConstantExpr::create(it->first.first->size,
+                             (target->inst->getType()->isIntegerTy(64))
+                                 ? Expr::Int64
+                                 : Expr::Int32));
   }
 }
 
