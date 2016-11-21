@@ -186,23 +186,43 @@ ExecutionState &LeastDecisions2TargetSearcher::selectState() {
     std::multimap<unsigned int, klee::ExecutionState*>::iterator next =
       storage.lower_bound(0);
 
-    if (next->first == UINT_MAX) {
-      Function* parent = next->second->pc->inst->getParent()->getParent();
-      // MACKE's own functions for checking errors should not be terminated
-      if (parent == NULL ||
-          strncmp(parent->getName().data(), "__macke_", strlen("__macke_")) !=
-              0) {
-        // stop further execution of states, that cannot reach the target
-        executor.terminateState(*(next->second));
-      }
-    }
+    // if (next->first == UINT_MAX) {
+    //   Function* parent = next->second->pc->inst->getParent()->getParent();
+    //   // MACKE's own functions for checking errors should not be terminated
+    //   if (parent == NULL ||
+    //       strncmp(parent->getName().data(), "__macke_", strlen("__macke_")) !=
+    //           0) {
+    //     // stop further execution of states, that cannot reach the target
+    //     executor.terminateState(*(next->second));
+    //   }
+    // }
 
-    return *(next->second);
+  //   if (next->first == UINT_MAX) { // I cannot reach the target
+  //     Function* parent = next->second->pc->inst->getParent()->getParent();
+  //     if(parent != NULL && parent->getName().equals(this->target)) { 
+  //       return this->nestedSearcher.selectState();
+  //   }
+  // }
+
+    Function* parent = next->second->pc->inst->getParent()->getParent();
+    if (next->first != UINT_MAX) {
+        // the target is reachable in the future
+        return *(next->second);  
+    } else if (parent != NULL && next->second->targetFunc) {
+        // the target was reached earlier
+        return this->nestedSearcher.selectState();
+    } else {
+       // Not reachable and not reached before
+       executor.terminateState(*(next->second));
+       return *(next->second);
+    }
 }
 
 void LeastDecisions2TargetSearcher::update(ExecutionState *current,
         const std::set<ExecutionState*> &addedStates,
         const std::set<ExecutionState*> &removedStates) {
+
+    this->nestedSearcher.update(current, addedStates, removedStates);
     // Internal counter for the number of states already deleted
     uint deletedcounter = 0;
 

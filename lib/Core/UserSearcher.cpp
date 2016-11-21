@@ -16,8 +16,12 @@
 #include "llvm/Support/CommandLine.h"
 #include <string>
 
+#include "klee/TargetFunc.h"
+
 using namespace llvm;
 using namespace klee;
+
+std::string targFuncName;
 
 namespace {
   cl::list<Searcher::CoreSearchType>
@@ -81,6 +85,7 @@ bool klee::userSearcherRequiresMD2U() {
 
 
 Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
+
   Searcher *searcher = NULL;
   switch (type) {
   case Searcher::DFS: searcher = new DFSSearcher(); break;
@@ -97,13 +102,13 @@ Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
     // Check for valid information for the function name
     if (TargetedFunctionName == "-") {
       llvm::errs() << "LD2T is missing target information \n";
-      llvm::errs() << " please add --targeted-function=... to your parameters\n";
+      llvm::errs() << " please add -targeted-function=... to your parameters\n";
       exit(1);
     }
+    targFuncName = TargetedFunctionName;
     searcher = new LeastDecisions2TargetSearcher(executor, TargetedFunctionName);
     break;
   }
-
   return searcher;
 }
 

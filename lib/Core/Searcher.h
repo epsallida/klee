@@ -126,12 +126,12 @@ namespace klee {
 
   class LeastDecisions2TargetSearcher : public Searcher {
     Executor &executor;
-    std::string target;
+    // std::string target;
     std::multimap<uint, ExecutionState*> storage;
 
   public:
     LeastDecisions2TargetSearcher(Executor &_executor, std::string _target) :
-                                  executor(_executor), target(_target) {
+                                  executor(_executor), target(_target), nestedSearcher() {
                                   /* emtpty */};
     ExecutionState &selectState();
     void update(ExecutionState *current,
@@ -141,6 +141,9 @@ namespace klee {
     void printName(llvm::raw_ostream &os) {
       os << "LeastDecisions2TargetSearcher\n";
     }
+    std::string target;
+    RandomSearcher nestedSearcher;
+
   private:
     uint countFutureDecisions2Target(ExecutionState* state);
   };

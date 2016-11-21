@@ -10,6 +10,10 @@
 #ifndef KLEE_USERSEARCHER_H
 #define KLEE_USERSEARCHER_H
 
+// #include "llvm/Support/CommandLine.h"
+// #include <string>
+
+
 namespace klee {
   class Executor;
   class Searcher;
@@ -20,4 +24,11 @@ namespace klee {
   Searcher *constructUserSearcher(Executor &executor);
 }
 
+// extern llvm::cl::opt<std::string> TargetedFunctionName(std::string, std::string, std::string);
+// ("targeted-function",llvm::cl::desc("Name of the function, that should be reached"), llvm::cl::init("-"));
+
+// llvm::cl::opt<std::string>
+//         TargetedFunctionName("targeted-function",
+//                              llvm::cl::desc("Name of the function, that should be reached"),
+//                              llvm::cl::init("-"));
 #endif

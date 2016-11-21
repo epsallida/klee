@@ -32,15 +32,20 @@
 #include <set>
 #include <stdarg.h>
 
+#include "klee/TargetFunc.h"
+
 using namespace llvm;
 using namespace klee;
 
 namespace { 
   cl::opt<bool>
   DebugLogStateMerge("debug-log-state-merge");
-}
 
-/***/
+  // cl::opt<std::string>
+  // TargetedFunctionName(myMap.lookup("targeted-function")->ArgStr,
+  //                   cl::desc("Name of the function, that should be reached"),
+  //                   cl::init("-"));
+}
 
 StackFrame::StackFrame(KInstIterator _caller, KFunction *_kf)
   : caller(_caller), kf(_kf), callPathNode(0), 
@@ -67,6 +72,8 @@ StackFrame::~StackFrame() {
 /***/
 
 ExecutionState::ExecutionState(KFunction *kf) :
+    targetFunc(false),
+
     pc(kf->instructions),
     prevPC(pc),
 
@@ -98,6 +105,8 @@ ExecutionState::~ExecutionState() {
 }
 
 ExecutionState::ExecutionState(const ExecutionState& state):
+    targetFunc(state.targetFunc),
+
     fnAliases(state.fnAliases),
     pc(state.pc),
     prevPC(state.prevPC),
@@ -130,6 +139,9 @@ ExecutionState *ExecutionState::branch() {
   depth++;
 
   ExecutionState *falseState = new ExecutionState(*this);
+
+  falseState->targetFunc = false;
+
   falseState->coveredNew = false;
   falseState->coveredLines.clear();
 
@@ -140,6 +152,26 @@ ExecutionState *ExecutionState::branch() {
 }
 
 void ExecutionState::pushFrame(KInstIterator caller, KFunction *kf) {
+  if(kf->function->getName().equals(targFuncName)) {
+    // llvm::errs() << "TARGET NAME: " << TargetedFuncName << "\n";
+    targetFunc = true; 
+  }
+  // StringMap<cl::Option*> myMap;
+  // cl::getRegisteredOptions(myMap);
+  // myMap.lookup("targeted-function");
+  // llvm::errs() << "-- : " <<  myMap.lookup("targeted-function")->ValueStr << "\n";
+  // llvm::errs() << "-- : " <<  myMap.lookup("targeted-function")->ValueStr << "\n";
+  // extern llvm::cl::opt<std::string> TargetedFunctionName;
+
+  // cl::opt<std::string>
+  // TargetedFunctionName(myMap.lookup("targeted-function")->ArgStr,
+  //                   cl::desc("Name of the function, that should be reached"),
+  //                   cl::init("-"));
+  
+  // llvm::errs() << " -- " << targFuncName << "\n";
+ 
+  // llvm::errs() << " -- " << myMap.lookup("targeted-function")->ArgStr << "\n";
+
   stack.push_back(StackFrame(caller,kf));
 }
 
@@ -191,6 +223,10 @@ bool ExecutionState::merge(const ExecutionState &b) {
   if (DebugLogStateMerge)
     llvm::errs() << "-- attempting merge of A:" << this << " with B:" << &b
                  << "--\n";
+
+  if(targetFunc != b.targetFunc)
+    return false;
+
   if (pc != b.pc)
     return false;
 
