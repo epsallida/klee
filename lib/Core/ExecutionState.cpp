@@ -41,10 +41,6 @@ namespace {
   cl::opt<bool>
   DebugLogStateMerge("debug-log-state-merge");
 
-  // cl::opt<std::string>
-  // TargetedFunctionName(myMap.lookup("targeted-function")->ArgStr,
-  //                   cl::desc("Name of the function, that should be reached"),
-  //                   cl::init("-"));
 }
 
 StackFrame::StackFrame(KInstIterator _caller, KFunction *_kf)
@@ -140,10 +136,10 @@ ExecutionState *ExecutionState::branch() {
 
   ExecutionState *falseState = new ExecutionState(*this);
 
-  falseState->targetFunc = false;
-
   falseState->coveredNew = false;
   falseState->coveredLines.clear();
+  falseState->targetFunc = false;
+  //falseState->targetFunc = false;
 
   weight *= .5;
   falseState->weight -= weight;
@@ -153,25 +149,8 @@ ExecutionState *ExecutionState::branch() {
 
 void ExecutionState::pushFrame(KInstIterator caller, KFunction *kf) {
   if(kf->function->getName().equals(targFuncName)) {
-    // llvm::errs() << "TARGET NAME: " << TargetedFuncName << "\n";
-    targetFunc = true; 
+    targetFunc = true;
   }
-  // StringMap<cl::Option*> myMap;
-  // cl::getRegisteredOptions(myMap);
-  // myMap.lookup("targeted-function");
-  // llvm::errs() << "-- : " <<  myMap.lookup("targeted-function")->ValueStr << "\n";
-  // llvm::errs() << "-- : " <<  myMap.lookup("targeted-function")->ValueStr << "\n";
-  // extern llvm::cl::opt<std::string> TargetedFunctionName;
-
-  // cl::opt<std::string>
-  // TargetedFunctionName(myMap.lookup("targeted-function")->ArgStr,
-  //                   cl::desc("Name of the function, that should be reached"),
-  //                   cl::init("-"));
-  
-  // llvm::errs() << " -- " << targFuncName << "\n";
- 
-  // llvm::errs() << " -- " << myMap.lookup("targeted-function")->ArgStr << "\n";
-
   stack.push_back(StackFrame(caller,kf));
 }
 
@@ -187,7 +166,6 @@ void ExecutionState::addSymbolic(const MemoryObject *mo, const Array *array) {
   mo->refCount++;
   symbolics.push_back(std::make_pair(mo, array));
 }
-///
 
 std::string ExecutionState::getFnAlias(std::string fn) {
   std::map < std::string, std::string >::iterator it = fnAliases.find(fn);
@@ -224,8 +202,9 @@ bool ExecutionState::merge(const ExecutionState &b) {
     llvm::errs() << "-- attempting merge of A:" << this << " with B:" << &b
                  << "--\n";
 
-  if(targetFunc != b.targetFunc)
+  if(targetFunc != b.targetFunc) {
     return false;
+  }
 
   if (pc != b.pc)
     return false;
