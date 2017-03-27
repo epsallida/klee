@@ -139,7 +139,6 @@ ExecutionState *ExecutionState::branch() {
   falseState->coveredNew = false;
   falseState->coveredLines.clear();
   falseState->targetFunc = false;
-  //falseState->targetFunc = false;
 
   weight *= .5;
   falseState->weight -= weight;
